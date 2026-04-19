@@ -1,4 +1,19 @@
 {
+  "entity": {
+    "sensor": {
+      "score": {
+        "name": "Cleanliness score"
+      },
+      "last_cleaned": {
+        "name": "Last cleaned"
+      }
+    },
+    "binary_sensor": {
+      "due": {
+        "name": "Cleaning due"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
