@@ -1,0 +1,7 @@
+{
+  "name": "Cleanliness Tracker",
+  "render_readme": true,
+  "homeassistant": "2026.3.0",
+  "country": "DE",
+  "zip_release": false
+}

@@ -1,0 +1,10 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cleanliness Tracker",
+        "description": "Pro Wohnraum einen Sauberkeits-Score basierend auf Pr\u00e4senz-Sensoren."
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+# Service definitions for cleanliness_tracker.
+# TODO(phase-1.6): mark_cleaned, reset, set_score (with selectors).

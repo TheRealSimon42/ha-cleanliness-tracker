@@ -1,0 +1,10 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cleanliness Tracker",
+        "description": "Per-room cleanliness scoring based on presence sensors."
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+# Blueprint stub. Implementation in phase 1.7.
+# Inputs: vacuum entity, daily time, optional notification service.
+# Action: call vacuum.clean_area for every area whose
+# binary_sensor.cleanliness_<room>_due is currently 'on'.
+blueprint:
+  name: Cleanliness Tracker — Saug fällige Räume
+  description: |
+    Saugt jeden Tag zur konfigurierten Zeit alle Räume, deren
+    `binary_sensor.cleanliness_<room>_due` gerade `on` ist.
+    (Stub — vollständige Implementierung folgt in Phase 1.7.)
+  domain: automation
+  source_url: https://github.com/TheRealSimon42/ha-cleanliness-tracker/blob/main/blueprints/automation/cleanliness_tracker/vacuum_overdue_rooms.yaml
+  input: {}
+trigger: []
+action: []
