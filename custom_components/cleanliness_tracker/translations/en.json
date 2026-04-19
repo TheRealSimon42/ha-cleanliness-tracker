@@ -34,6 +34,42 @@
       "name_required": "Please pick a name."
     }
   },
+  "services": {
+    "mark_cleaned": {
+      "name": "Mark as cleaned",
+      "description": "Resets the cleanliness score to 0 and stamps 'last cleaned' to now. Without entity_id every room is reset.",
+      "fields": {
+        "entity_id": {
+          "name": "Score sensor(s)",
+          "description": "Optional. One or more score sensors. Leave empty for all rooms."
+        }
+      }
+    },
+    "reset": {
+      "name": "Reset score",
+      "description": "Resets the score to 0 without changing 'last cleaned'. For correcting false-positive sensor accruals.",
+      "fields": {
+        "entity_id": {
+          "name": "Score sensor(s)",
+          "description": "Optional. One or more score sensors. Leave empty for all rooms."
+        }
+      }
+    },
+    "set_score": {
+      "name": "Set score",
+      "description": "Set a room's score to an explicit value (0 - 100). Useful for manual overrides.",
+      "fields": {
+        "entity_id": {
+          "name": "Score sensor",
+          "description": "The room's score sensor."
+        },
+        "score": {
+          "name": "Score",
+          "description": "Target value between 0 and 100."
+        }
+      }
+    }
+  },
   "config_subentries": {
     "room": {
       "initiate_flow": {
