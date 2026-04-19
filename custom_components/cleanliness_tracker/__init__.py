@@ -37,6 +37,7 @@ from .const import (
     TICK_INTERVAL_SECONDS,
 )
 from .models import RoomConfig
+from .services import async_register_services, async_unregister_services
 from .storage import CleanlinessStore
 from .tracker import RoomTracker
 
@@ -130,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     domain_data = hass.data.setdefault(DOMAIN, {})
+    is_first_entry = not domain_data
     domain_data[entry.entry_id] = {
         "trackers": trackers,
         "store": store,
@@ -137,6 +139,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "_unsub_state": unsub_state,
         "_unsub_tick": unsub_tick,
     }
+    if is_first_entry:
+        async_register_services(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -158,6 +162,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await data["save_state"]()
 
     if not hass.data[DOMAIN]:
+        async_unregister_services(hass)
         hass.data.pop(DOMAIN)
 
     return True

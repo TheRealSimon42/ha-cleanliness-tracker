@@ -34,6 +34,42 @@
       "name_required": "Bitte einen Namen vergeben."
     }
   },
+  "services": {
+    "mark_cleaned": {
+      "name": "Als gereinigt markieren",
+      "description": "Setzt den Sauberkeits-Score auf 0 und stempelt 'zuletzt gereinigt' auf jetzt. Ohne entity_id werden alle R\u00e4ume zur\u00fcckgesetzt.",
+      "fields": {
+        "entity_id": {
+          "name": "Score-Sensor(en)",
+          "description": "Optional. Ein oder mehrere Score-Sensoren. Leer lassen f\u00fcr alle R\u00e4ume."
+        }
+      }
+    },
+    "reset": {
+      "name": "Score zur\u00fccksetzen",
+      "description": "Setzt den Score auf 0, ohne 'zuletzt gereinigt' zu \u00e4ndern. F\u00fcr Korrekturen nach Sensor-Fehlalarmen.",
+      "fields": {
+        "entity_id": {
+          "name": "Score-Sensor(en)",
+          "description": "Optional. Ein oder mehrere Score-Sensoren. Leer lassen f\u00fcr alle R\u00e4ume."
+        }
+      }
+    },
+    "set_score": {
+      "name": "Score setzen",
+      "description": "Setzt den Score eines Raumes auf einen bestimmten Wert (0 - 100). N\u00fctzlich, um manuell einzugreifen.",
+      "fields": {
+        "entity_id": {
+          "name": "Score-Sensor",
+          "description": "Der Score-Sensor des Raumes."
+        },
+        "score": {
+          "name": "Score",
+          "description": "Zielwert zwischen 0 und 100."
+        }
+      }
+    }
+  },
   "config_subentries": {
     "room": {
       "initiate_flow": {

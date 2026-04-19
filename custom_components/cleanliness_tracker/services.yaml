@@ -1,2 +1,41 @@
-# Service definitions for cleanliness_tracker.
-# TODO(phase-1.6): mark_cleaned, reset, set_score (with selectors).
+mark_cleaned:
+  fields:
+    entity_id:
+      required: false
+      example: sensor.wohnzimmer_cleanliness_score
+      selector:
+        entity:
+          integration: cleanliness_tracker
+          domain: sensor
+          multiple: true
+
+reset:
+  fields:
+    entity_id:
+      required: false
+      example: sensor.wohnzimmer_cleanliness_score
+      selector:
+        entity:
+          integration: cleanliness_tracker
+          domain: sensor
+          multiple: true
+
+set_score:
+  fields:
+    entity_id:
+      required: true
+      example: sensor.wohnzimmer_cleanliness_score
+      selector:
+        entity:
+          integration: cleanliness_tracker
+          domain: sensor
+    score:
+      required: true
+      example: 50
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          mode: box
