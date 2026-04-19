@@ -1,15 +1,72 @@
-# Blueprint stub. Implementation in phase 1.7.
-# Inputs: vacuum entity, daily time, optional notification service.
-# Action: call vacuum.clean_area for every area whose
-# binary_sensor.cleanliness_<room>_due is currently 'on'.
 blueprint:
   name: Cleanliness Tracker — Saug fällige Räume
-  description: |
-    Saugt jeden Tag zur konfigurierten Zeit alle Räume, deren
-    `binary_sensor.cleanliness_<room>_due` gerade `on` ist.
-    (Stub — vollständige Implementierung folgt in Phase 1.7.)
+  description: >
+    Saugt täglich zur konfigurierten Zeit alle Räume, deren
+    `binary_sensor.cleanliness_*_due` aktuell `on` ist.
+    Nutzt `vacuum.clean_area` (verfügbar ab Home Assistant 2026.3).
   domain: automation
   source_url: https://github.com/TheRealSimon42/ha-cleanliness-tracker/blob/main/blueprints/automation/cleanliness_tracker/vacuum_overdue_rooms.yaml
-  input: {}
-trigger: []
-action: []
+  input:
+    vacuum_entity:
+      name: Saugroboter
+      description: Die Vacuum-Entity, die die fälligen Räume saugen soll.
+      selector:
+        entity:
+          domain: vacuum
+    schedule:
+      name: Uhrzeit
+      description: Tägliche Startzeit (Local Time).
+      default: "09:00:00"
+      selector:
+        time: {}
+    notification_service:
+      name: Benachrichtigungs-Service (optional)
+      description: >
+        z. B. `notify.mobile_app_iphone`. Leer lassen für keine Benachrichtigung.
+      default: ""
+      selector:
+        text: {}
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: time
+    at: !input schedule
+
+variables:
+  due_areas: >
+    {{ states.binary_sensor
+       | selectattr('entity_id', 'search', '_due$')
+       | selectattr('attributes.attribution', 'undefined')
+       | selectattr('attributes.area_id', 'defined')
+       | selectattr('state', 'eq', 'on')
+       | map(attribute='attributes.area_id')
+       | unique
+       | list }}
+  notify_service: !input notification_service
+
+condition:
+  - condition: template
+    value_template: "{{ due_areas | length > 0 }}"
+
+action:
+  - alias: "Saugroboter in alle fälligen Areas schicken"
+    repeat:
+      for_each: "{{ due_areas }}"
+      sequence:
+        - action: vacuum.clean_area
+          target:
+            entity_id: !input vacuum_entity
+          data:
+            area_id: "{{ repeat.item }}"
+  - alias: "Optional benachrichtigen"
+    if:
+      - condition: template
+        value_template: "{{ notify_service != '' }}"
+    then:
+      - service: "{{ notify_service }}"
+        data:
+          title: "Cleanliness Tracker"
+          message: >
+            Sauge: {{ due_areas | join(', ') }}
