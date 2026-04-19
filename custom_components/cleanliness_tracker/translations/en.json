@@ -3,7 +3,63 @@
     "step": {
       "user": {
         "title": "Cleanliness Tracker",
-        "description": "Per-room cleanliness scoring based on presence sensors."
+        "description": "Per-room cleanliness scoring based on presence sensors. After setup, use 'Configure' to add as many rooms as you like.",
+        "data": {
+          "name": "Name"
+        },
+        "data_description": {
+          "name": "A friendly name for this integration instance (e.g. 'Ground floor')."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "An integration with this name already exists."
+    },
+    "error": {
+      "name_required": "Please pick a name."
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "initiate_flow": {
+        "user": "Add room",
+        "reconfigure": "Edit room"
+      },
+      "entry_type": "Room",
+      "step": {
+        "user": {
+          "title": "Add room",
+          "description": "Pairs an area with a presence entity and defines when the room is considered 'due'.",
+          "data": {
+            "area_id": "Area",
+            "presence_entity_id": "Presence entity",
+            "threshold": "Threshold ('due' score)",
+            "weight_per_minute": "Weight per minute of presence"
+          },
+          "data_description": {
+            "area_id": "The HA area this room belongs to.",
+            "presence_entity_id": "A binary_sensor with motion / presence / occupancy. Recommended device_class: motion or occupancy.",
+            "threshold": "Score at which binary_sensor.cleanliness_ROOM_due turns on (default 80).",
+            "weight_per_minute": "Score points accrued per minute of active presence (default 0.5)."
+          }
+        },
+        "reconfigure": {
+          "title": "Edit room",
+          "description": "Changes take effect immediately; the existing score and last-cleaned timestamp are preserved.",
+          "data": {
+            "area_id": "Area",
+            "presence_entity_id": "Presence entity",
+            "threshold": "Threshold ('due' score)",
+            "weight_per_minute": "Weight per minute of presence"
+          }
+        }
+      },
+      "error": {
+        "area_required": "Please select an area.",
+        "area_duplicate": "A room for this area already exists.",
+        "presence_required": "Please select a presence entity.",
+        "threshold_out_of_range": "Threshold must be between 1 and 100.",
+        "weight_out_of_range": "Weight must be greater than 0."
       }
     }
   }

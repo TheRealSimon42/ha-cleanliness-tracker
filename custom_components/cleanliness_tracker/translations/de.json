@@ -3,7 +3,63 @@
     "step": {
       "user": {
         "title": "Cleanliness Tracker",
-        "description": "Pro Wohnraum einen Sauberkeits-Score basierend auf Pr\u00e4senz-Sensoren."
+        "description": "Pro Wohnraum einen Sauberkeits-Score basierend auf Pr\u00e4senz-Sensoren. Du kannst nach dem Erstellen \u00fcber 'Konfigurieren' beliebig viele R\u00e4ume hinzuf\u00fcgen.",
+        "data": {
+          "name": "Name"
+        },
+        "data_description": {
+          "name": "Frei w\u00e4hlbarer Name f\u00fcr diese Integration (z. B. 'Wohnung Erdgeschoss')."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Eine Integration mit diesem Namen existiert bereits."
+    },
+    "error": {
+      "name_required": "Bitte einen Namen vergeben."
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "initiate_flow": {
+        "user": "Raum hinzuf\u00fcgen",
+        "reconfigure": "Raum bearbeiten"
+      },
+      "entry_type": "Raum",
+      "step": {
+        "user": {
+          "title": "Raum hinzuf\u00fcgen",
+          "description": "Verkn\u00fcpft eine Area mit einer Pr\u00e4senz-Entity und legt fest, wann der Raum als 'f\u00e4llig' gilt.",
+          "data": {
+            "area_id": "Area",
+            "presence_entity_id": "Pr\u00e4senz-Entity",
+            "threshold": "Schwellwert (\u201ef\u00e4llig\u201c-Score)",
+            "weight_per_minute": "Gewichtung pro Minute Pr\u00e4senz"
+          },
+          "data_description": {
+            "area_id": "Die HA-Area, in der dieser Raum liegt.",
+            "presence_entity_id": "Ein binary_sensor mit Bewegung/Pr\u00e4senz/Anwesenheit. Empfohlen: device_class motion oder occupancy.",
+            "threshold": "Score, ab dem binary_sensor.cleanliness_RAUM_due eingeschaltet wird (Standard 80).",
+            "weight_per_minute": "Wieviele Score-Punkte sich pro Minute aktiver Pr\u00e4senz aufbauen (Standard 0.5)."
+          }
+        },
+        "reconfigure": {
+          "title": "Raum bearbeiten",
+          "description": "\u00c4nderungen wirken sich sofort aus; bestehender Score und Last-Cleaned bleiben erhalten.",
+          "data": {
+            "area_id": "Area",
+            "presence_entity_id": "Pr\u00e4senz-Entity",
+            "threshold": "Schwellwert (\u201ef\u00e4llig\u201c-Score)",
+            "weight_per_minute": "Gewichtung pro Minute Pr\u00e4senz"
+          }
+        }
+      },
+      "error": {
+        "area_required": "Bitte eine Area ausw\u00e4hlen.",
+        "area_duplicate": "F\u00fcr diese Area existiert bereits ein Raum.",
+        "presence_required": "Bitte eine Pr\u00e4senz-Entity ausw\u00e4hlen.",
+        "threshold_out_of_range": "Schwellwert muss zwischen 1 und 100 liegen.",
+        "weight_out_of_range": "Gewichtung muss gr\u00f6\u00dfer als 0 sein."
       }
     }
   }
