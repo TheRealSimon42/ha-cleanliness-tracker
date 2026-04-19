@@ -11,7 +11,9 @@ Authoritative spec: ``docs/SCORE_MODEL.md``.
 
 from __future__ import annotations
 
+import contextlib
 import math
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 from .const import DEFAULT_PRESENCE_WEIGHT, DEFAULT_THRESHOLD, SCORE_CAP
@@ -19,6 +21,8 @@ from .models import RoomConfig, RoomState
 from .soil_calculator import apply_delta, compute_score_delta
 
 __all__ = ["RoomTracker"]
+
+UpdateListener = Callable[[], None]
 
 
 def _empty_state() -> RoomState:
@@ -77,6 +81,7 @@ class RoomTracker:
         """
         self._config = config
         self._state: RoomState = state if state is not None else _empty_state()
+        self._listeners: list[UpdateListener] = []
 
     # ------------------------------------------------------------------
     # Read-only views
@@ -119,6 +124,25 @@ class RoomTracker:
         return self._state["presence_started_at"] is not None
 
     # ------------------------------------------------------------------
+    # Update-listener wiring (used by sensors / binary_sensors)
+    # ------------------------------------------------------------------
+
+    def add_update_listener(self, listener: UpdateListener) -> Callable[[], None]:
+        """Subscribe to state changes; returns an unsubscribe callable."""
+        self._listeners.append(listener)
+
+        def _unsub() -> None:
+            with contextlib.suppress(ValueError):
+                self._listeners.remove(listener)
+
+        return _unsub
+
+    def _dispatch(self) -> None:
+        """Notify subscribers that state changed."""
+        for listener in list(self._listeners):
+            listener()
+
+    # ------------------------------------------------------------------
     # Lifecycle methods
     # ------------------------------------------------------------------
 
@@ -135,6 +159,7 @@ class RoomTracker:
             return
         self._state["presence_started_at"] = _to_iso(now)
         self._state["last_scored_at"] = _to_iso(now)
+        self._dispatch()
 
     def on_presence_end(self, now: datetime) -> None:
         """Close an open presence interval and apply the accrued score delta.
@@ -149,6 +174,7 @@ class RoomTracker:
         self._accrue_from(anchor, now)
         self._state["presence_started_at"] = None
         self._state["last_scored_at"] = None
+        self._dispatch()
 
     def periodic_update(self, now: datetime) -> None:
         """Apply a partial score delta for an *ongoing* presence interval.
@@ -166,6 +192,7 @@ class RoomTracker:
             return
         self._accrue_from(anchor, now)
         self._state["last_scored_at"] = _to_iso(now)
+        self._dispatch()
 
     def mark_cleaned(self, now: datetime) -> None:
         """Reset the score to zero and stamp ``last_cleaned_at``.
@@ -180,6 +207,7 @@ class RoomTracker:
         self._state["last_cleaned_at"] = _to_iso(now)
         if self._state["presence_started_at"] is not None:
             self._state["last_scored_at"] = _to_iso(now)
+        self._dispatch()
 
     def reset(self, now: datetime) -> None:
         """Set the score to zero without touching ``last_cleaned_at``.
@@ -192,6 +220,7 @@ class RoomTracker:
         self._state["current_score"] = 0.0
         if self._state["presence_started_at"] is not None:
             self._state["last_scored_at"] = _to_iso(now)
+        self._dispatch()
 
     def set_score(self, score: float, *, cap: float = SCORE_CAP) -> None:
         """Override the current score (manual ``set_score`` service).
@@ -208,6 +237,7 @@ class RoomTracker:
                 f"score must be a finite value in [0, {cap}], got {score!r}",
             )
         self._state["current_score"] = float(score)
+        self._dispatch()
 
     # ------------------------------------------------------------------
     # Internal helpers
