@@ -181,6 +181,17 @@ class TestPresenceLifecycle:
         tracker = _trackers(hass, entry)[next(iter(_trackers(hass, entry)))]
         assert tracker.is_presence_active is True
 
+    async def test_due_binary_exposes_area_id_attribute(self, hass: HomeAssistant):
+        entry, _room_id = _make_entry_with_room(hass, area_id="bad")
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        due = next(
+            s
+            for s in hass.states.async_all()
+            if s.entity_id.startswith("binary_sensor.")
+        )
+        assert due.attributes.get("area_id") == "bad"
+
     async def test_due_binary_flips_at_threshold(self, hass: HomeAssistant):
         entry, _room_id = _make_entry_with_room(hass, threshold=10.0, weight=2.0)
         with freeze_time(dt_util.utcnow()) as frozen:

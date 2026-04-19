@@ -65,3 +65,8 @@ class _DueBinarySensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return self._tracker.is_due
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Expose the room's area_id so blueprints can target vacuum.clean_area."""
+        return {"area_id": self._tracker.config["area_id"]}
