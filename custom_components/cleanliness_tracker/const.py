@@ -21,6 +21,10 @@ CONF_PRESENCE_ENTITY_ID: Final = "presence_entity_id"
 CONF_THRESHOLD: Final = "threshold"
 CONF_WEIGHT_PER_MINUTE: Final = "weight_per_minute"
 
+# Subentry types -------------------------------------------------------------
+
+SUBENTRY_ROOM: Final = "room"
+
 # Defaults -------------------------------------------------------------------
 
 DEFAULT_THRESHOLD: Final = 80.0
