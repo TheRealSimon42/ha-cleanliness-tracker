@@ -39,7 +39,7 @@
           "data_description": {
             "area_id": "Die HA-Area, in der dieser Raum liegt.",
             "presence_entity_id": "Ein binary_sensor mit Bewegung/Pr\u00e4senz/Anwesenheit. Empfohlen: device_class motion oder occupancy.",
-            "threshold": "Score, ab dem binary_sensor.<room>_due eingeschaltet wird (Standard 80).",
+            "threshold": "Score, ab dem binary_sensor.cleanliness_RAUM_due eingeschaltet wird (Standard 80).",
             "weight_per_minute": "Wieviele Score-Punkte sich pro Minute aktiver Pr\u00e4senz aufbauen (Standard 0.5)."
           }
         },

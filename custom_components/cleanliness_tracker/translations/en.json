@@ -39,7 +39,7 @@
           "data_description": {
             "area_id": "The HA area this room belongs to.",
             "presence_entity_id": "A binary_sensor with motion / presence / occupancy. Recommended device_class: motion or occupancy.",
-            "threshold": "Score at which binary_sensor.<room>_due turns on (default 80).",
+            "threshold": "Score at which binary_sensor.cleanliness_ROOM_due turns on (default 80).",
             "weight_per_minute": "Score points accrued per minute of active presence (default 0.5)."
           }
         },
