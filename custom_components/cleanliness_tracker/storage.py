@@ -2,4 +2,5 @@
 
 from __future__ import annotations
 
-# TODO(phase-1.2): implement CleanlinessStore wrapping homeassistant.helpers.storage.Store.
+# TODO(phase-1.2): implement CleanlinessStore wrapping
+# homeassistant.helpers.storage.Store.
