@@ -2,7 +2,7 @@
 
 Per-Room Cleanliness Scoring für Home Assistant — basierend auf Präsenz-/Bewegungsmeldern.
 
-> Status: **Pre-Release.** Erste MVP-Version (`v0.1.0`) in Vorbereitung.
+> Status: **v0.1.0 — MVP-Release.** Funktional komplett (Score-Tracking, Sensoren, Services, Blueprint). Roadmap siehe unten.
 
 ## ✨ Features
 
