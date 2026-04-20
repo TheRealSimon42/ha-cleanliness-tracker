@@ -83,18 +83,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
         config = _build_room_config(subentry_id, dict(subentry.data))
         trackers[subentry_id] = RoomTracker(config, persisted.get(subentry_id))
-        # Pre-register the per-room device with the subentry link so HA's UI
-        # groups it under its room subentry rather than under a catch-all
-        # "devices not belonging to any subentry" bucket. DeviceInfo alone
-        # can't carry config_subentry_id, which is why we do this here.
-        device_reg.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            config_subentry_id=subentry_id,
-            identifiers={(DOMAIN, f"{entry.entry_id}.{subentry_id}")},
-            name=config["area_id"],
-            manufacturer="simon42",
-            model="Cleanliness Tracker Room",
+        # Migration: v0.1.0 registered the per-room device via DeviceInfo
+        # on the entity (no config_subentry_id), which left an (entry_id,
+        # None) "orphan" link in config_entries_subentries. The HA UI then
+        # shows the device BOTH under its subentry and under a "devices
+        # not belonging to any subentry" bucket. Strip that orphan link
+        # here; the sensor platform now adds entities per subentry via
+        # async_add_entities(..., config_subentry_id=...), so new installs
+        # don't create the orphan link in the first place.
+        device = device_reg.async_get_device(
+            identifiers={(DOMAIN, f"{entry.entry_id}.{subentry_id}")}
         )
+        if device is not None and None in device.config_entries_subentries.get(
+            entry.entry_id, set()
+        ):
+            device_reg.async_update_device(
+                device.id,
+                remove_config_entry_id=entry.entry_id,
+                remove_config_subentry_id=None,
+            )
 
     presence_to_room: dict[str, str] = {
         tracker.config["presence_entity_id"]: room_id

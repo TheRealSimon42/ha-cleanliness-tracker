@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -26,15 +26,24 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create sensors for every room tracker in this entry."""
+    """Create sensors for every room tracker in this entry.
+
+    Added per subentry so the entity + device registries record the
+    subentry link. Adding all entities in a single batch without the
+    ``config_subentry_id`` kwarg would register the device under the
+    entry's "no subentry" bucket.
+    """
     trackers: dict[str, RoomTracker] = hass.data[DOMAIN][entry.entry_id]["trackers"]
-    entities: list[SensorEntity] = []
     for room_id, tracker in trackers.items():
-        entities.append(_ScoreSensor(entry.entry_id, room_id, tracker))
-        entities.append(_LastCleanedSensor(entry.entry_id, room_id, tracker))
-    async_add_entities(entities)
+        async_add_entities(
+            [
+                _ScoreSensor(entry.entry_id, room_id, tracker),
+                _LastCleanedSensor(entry.entry_id, room_id, tracker),
+            ],
+            config_subentry_id=room_id,
+        )
 
 
 class _RoomEntityBase(SensorEntity):
