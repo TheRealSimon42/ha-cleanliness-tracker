@@ -275,6 +275,40 @@ class TestSubentryLifecycle:
         linked_subentries = device.config_entries_subentries.get(entry.entry_id, set())
         assert room_id in linked_subentries
 
+    async def test_setup_strips_orphan_device_link_from_v010(self, hass: HomeAssistant):
+        """v0.1.0 registered devices without config_subentry_id. On upgrade
+        the new code adds the (entry_id, subentry_id) link but the old
+        (entry_id, None) orphan link stayed, causing the UI to show the
+        device twice. The setup must strip the orphan link."""
+        entry, room_id = _make_entry_with_room(hass)
+        device_reg = dr.async_get(hass)
+
+        # Simulate the v0.1.0 state: device registered with no subentry.
+        device_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{entry.entry_id}.{room_id}")},
+            name="legacy",
+            manufacturer="simon42",
+            model="Cleanliness Tracker Room",
+        )
+        legacy = device_reg.async_get_device(
+            identifiers={(DOMAIN, f"{entry.entry_id}.{room_id}")}
+        )
+        assert legacy is not None
+        assert None in legacy.config_entries_subentries.get(entry.entry_id, set())
+
+        # Run setup — should migrate the link.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = device_reg.async_get_device(
+            identifiers={(DOMAIN, f"{entry.entry_id}.{room_id}")}
+        )
+        assert device is not None
+        linked = device.config_entries_subentries.get(entry.entry_id, set())
+        assert room_id in linked
+        assert None not in linked
+
     async def test_adding_subentry_after_setup_reloads_and_creates_entities(
         self, hass: HomeAssistant
     ):

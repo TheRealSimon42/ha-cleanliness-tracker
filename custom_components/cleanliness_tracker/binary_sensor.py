@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -23,14 +23,15 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create one due-binary-sensor per room tracker."""
+    """Create one due-binary-sensor per room tracker, linked to its subentry."""
     trackers: dict[str, RoomTracker] = hass.data[DOMAIN][entry.entry_id]["trackers"]
-    async_add_entities(
-        _DueBinarySensor(entry.entry_id, room_id, tracker)
-        for room_id, tracker in trackers.items()
-    )
+    for room_id, tracker in trackers.items():
+        async_add_entities(
+            [_DueBinarySensor(entry.entry_id, room_id, tracker)],
+            config_subentry_id=room_id,
+        )
 
 
 class _DueBinarySensor(BinarySensorEntity):
