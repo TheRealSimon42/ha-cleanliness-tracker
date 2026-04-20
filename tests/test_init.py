@@ -20,6 +20,7 @@ from pytest_homeassistant_custom_component.common import (
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from custom_components.cleanliness_tracker.const import (
@@ -254,3 +255,55 @@ class TestPersistenceAndUnload:
         await hass.async_block_till_done()
         # DOMAIN dropped entirely once the last entry unloads.
         assert DOMAIN not in hass.data
+
+
+class TestSubentryLifecycle:
+    async def test_device_links_to_subentry(self, hass: HomeAssistant):
+        """Device registry entry must carry config_subentry_id so HA's UI
+        groups the room device under its subentry rather than into a
+        'devices not belonging to any subentry' bucket."""
+        entry, room_id = _make_entry_with_room(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device_reg = dr.async_get(hass)
+        device = device_reg.async_get_device(
+            identifiers={(DOMAIN, f"{entry.entry_id}.{room_id}")}
+        )
+        assert device is not None
+        # config_entries_subentries is a dict {entry_id: {subentry_id, ...}}
+        linked_subentries = device.config_entries_subentries.get(entry.entry_id, set())
+        assert room_id in linked_subentries
+
+    async def test_adding_subentry_after_setup_reloads_and_creates_entities(
+        self, hass: HomeAssistant
+    ):
+        """Without the update listener, a newly added room would be invisible
+        until a manual reload. The listener must pick up subentry changes
+        and rebuild the trackers."""
+        entry, _ = _make_entry_with_room(
+            hass, area_id="wohnzimmer", presence="binary_sensor.wohnzimmer_p"
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        initial_tracker_count = len(_trackers(hass, entry))
+        assert initial_tracker_count == 1
+
+        new_sub = ConfigSubentry(
+            data={
+                CONF_AREA_ID: "bad",
+                CONF_PRESENCE_ENTITY_ID: "binary_sensor.bad_p",
+                CONF_THRESHOLD: 80.0,
+                CONF_WEIGHT_PER_MINUTE: 0.5,
+            },
+            subentry_type=SUBENTRY_ROOM,
+            title="bad",
+            unique_id=None,
+        )
+        hass.config_entries.async_add_subentry(entry, new_sub)
+        await hass.async_block_till_done()
+
+        # The update listener should have triggered an async_reload, which
+        # rebuilds the trackers including the new room.
+        assert len(_trackers(hass, entry)) == 2
+        assert new_sub.subentry_id in _trackers(hass, entry)

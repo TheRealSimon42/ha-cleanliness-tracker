@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
@@ -76,11 +77,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     persisted = await store.async_load()
 
     trackers: dict[str, RoomTracker] = {}
+    device_reg = dr.async_get(hass)
     for subentry_id, subentry in entry.subentries.items():
         if subentry.subentry_type != SUBENTRY_ROOM:
             continue
         config = _build_room_config(subentry_id, dict(subentry.data))
         trackers[subentry_id] = RoomTracker(config, persisted.get(subentry_id))
+        # Pre-register the per-room device with the subentry link so HA's UI
+        # groups it under its room subentry rather than under a catch-all
+        # "devices not belonging to any subentry" bucket. DeviceInfo alone
+        # can't carry config_subentry_id, which is why we do this here.
+        device_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            config_subentry_id=subentry_id,
+            identifiers={(DOMAIN, f"{entry.entry_id}.{subentry_id}")},
+            name=config["area_id"],
+            manufacturer="simon42",
+            model="Cleanliness Tracker Room",
+        )
 
     presence_to_room: dict[str, str] = {
         tracker.config["presence_entity_id"]: room_id
@@ -130,6 +144,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, _periodic_tick, timedelta(seconds=TICK_INTERVAL_SECONDS)
     )
 
+    # Subentry lifecycle: HA does NOT automatically reload the config entry
+    # when the user adds / edits / removes a room subentry, so the newly
+    # added room would be invisible until a manual reload. Wire up an update
+    # listener that reloads the entry on any such change.
+    unsub_update = entry.add_update_listener(_async_reload_on_update)
+
     domain_data = hass.data.setdefault(DOMAIN, {})
     is_first_entry = not domain_data
     domain_data[entry.entry_id] = {
@@ -138,12 +158,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "save_state": _save_state,
         "_unsub_state": unsub_state,
         "_unsub_tick": unsub_tick,
+        "_unsub_update": unsub_update,
     }
     if is_first_entry:
         async_register_services(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_reload_on_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when its subentries / options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -156,6 +182,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if data["_unsub_state"] is not None:
         data["_unsub_state"]()
     data["_unsub_tick"]()
+    data["_unsub_update"]()
 
     # Final flush so any in-flight presence interval that ended right before
     # the unload is on disk for the next start.
